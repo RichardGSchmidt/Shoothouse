@@ -8,6 +8,8 @@ public class Actors : MonoBehaviour, IDamageable {
     protected float health;
     protected bool dead;
 
+    public event System.Action OnDeath;
+
 	protected virtual void Start () {
         health = startingHealth;
 		
@@ -25,6 +27,12 @@ public class Actors : MonoBehaviour, IDamageable {
     protected void Die()
     {
         dead = true;
+
+        if(OnDeath!=null)
+        {
+            OnDeath();
+        }
+
         GameObject.Destroy(gameObject);
     }
 }
