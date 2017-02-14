@@ -15,26 +15,45 @@ public class Enemy : Actors {
     State currentState;
     NavMeshAgent pathfinder;
     Transform target;
+
+    Actors targetActor;
+
+    float damage = 1;
     float attackDelay = 1;
     float nextAttack;
 
     float attackDistanceThreshold = 1.5f;
+
+    bool hasTarget;
 
     protected override void Start ()
     {
         base.Start();
         pathfinder = GetComponent<NavMeshAgent>();
 
-        currentState = State.Chasing;
-        target = GameObject.FindGameObjectWithTag("Player").transform;
-        StartCoroutine(UpdatePath());
+        if (GameObject.FindGameObjectWithTag("Player") != null)
+        {
+            currentState = State.Chasing;
+            hasTarget = true;
+            target = GameObject.FindGameObjectWithTag("Player").transform;
+            targetActor = target.GetComponent<Actors>();
+            targetActor.OnDeath += OnTargetDeath;
+            StartCoroutine(UpdatePath());
+        }
 	}
+
+    void OnTargetDeath()
+    {
+        hasTarget = false;
+        currentState = State.Idle;
+    }
+
 
     // Update is called once per frame
     void Update()
     {
 
-        if (Time.time > nextAttack)
+        if (hasTarget&&Time.time > nextAttack)
         { 
             float sqrDistanceToTarget = (target.position - transform.position).sqrMagnitude;
 
@@ -56,9 +75,15 @@ public class Enemy : Actors {
 
         float attackSpeed = 3;
         float percent = 0;
+        bool hasAttacked = false;
 
         while (percent <= 1)
         {
+            if (percent >= .5f && !hasAttacked)
+            {
+                hasAttacked = true;
+                targetActor.TakeDmg(damage);
+            }
             percent += Time.deltaTime * attackSpeed;
             float interpolation = (-Mathf.Pow(percent, 2) + percent) * 4;
             transform.position = Vector3.Lerp(originalPos, attackPos, interpolation);
@@ -74,7 +99,7 @@ public class Enemy : Actors {
     {
         float refreshRate = .25f;
 
-        while (target != null&&!dead)
+        while (hasTarget&&!dead)
         {
             if (currentState == State.Chasing)
             {

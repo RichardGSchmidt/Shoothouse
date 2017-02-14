@@ -17,6 +17,12 @@ public class Actors : MonoBehaviour, IDamageable {
 	
     public void TakeHit(float dmg, RaycastHit hit)
     {
+        //for particle effects.
+        TakeDmg(dmg);
+    }
+
+    public void TakeDmg(float dmg)
+    {
         health -= dmg;
         if (health <= 0 && !dead)
         {
